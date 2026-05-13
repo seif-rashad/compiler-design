@@ -716,12 +716,6 @@ function renderExam() {
     </div>`;
   }
 
-  let feedbackHtml = '';
-  if (showFeedback && answered) {
-    const ok = userAns === correct;
-    feedbackHtml = `<div class="feedback ${ok?'ok':'bad'}">${ok ? '✓ correct' : '✗ incorrect — see highlighted answer above'}</div>`;
-  }
-
   let unansweredNotice = '';
   if (state.mode === 'exam' && isLast && !allAnswered) {
     unansweredNotice = `<div class="notice">${100 - answeredCount} question${100-answeredCount!==1?'s':''} unanswered — use the dots above to navigate back.</div>`;
@@ -742,7 +736,6 @@ function renderExam() {
     </div>
     <div class="q-text">${q.text}</div>
     ${optHtml}
-    ${feedbackHtml}
     ${unansweredNotice}
     <div class="nav-row">
       <button class="btn" onclick="prevQ()" ${state.current===0?'disabled':''}>← Previous</button>
