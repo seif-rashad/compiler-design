@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compiler Design — Exam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f7f6f3;
+  --surface: #ffffff;
+  --border: #e2e0da;
+  --border-strong: #c8c5bc;
+  --text: #1a1916;
+  --text-secondary: #6b6860;
+  --text-tertiary: #9e9b94;
+  --accent: #1a1916;
+  --success-bg: #edf7ee;
+  --success-border: #a8d5ab;
+  --success-text: #2d6e32;
+  --danger-bg: #fdf0ef;
+  --danger-border: #f0aba5;
+  --danger-text: #8b2217;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+
+html { font-size: 16px; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* Layout */
+.site-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  text-decoration: none;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+.header-stat {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-family: var(--mono);
+}
+.header-stat span { color: var(--text); font-weight: 500; }
+
+.main {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+/* Start screen */
+.start-screen { max-width: 560px; margin: 3rem auto 0; }
+.start-screen h1 {
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+.start-screen .subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 2.5rem;
+  font-family: var(--mono);
+}
+.stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 2rem;
+}
+.stat-cell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+.stat-cell .num {
+  font-size: 28px;
+  font-weight: 300;
+  font-family: var(--mono);
+  letter-spacing: -0.02em;
+  display: block;
+  margin-bottom: 2px;
+}
+.stat-cell .lbl {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.mode-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+.mode-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  text-align: left;
+}
+.mode-card:hover { border-color: var(--border-strong); }
+.mode-card.active {
+  border-color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--text);
+}
+.mode-card .mode-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.mode-card .mode-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.mode-card .mode-icon {
+  font-family: var(--mono);
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: var(--text-tertiary);
+}
+.btn-start {
+  width: 100%;
+  padding: 13px;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: var(--sans);
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: opacity 0.15s;
+}
+.btn-start:hover { opacity: 0.85; }
+
+/* Progress */
+.progress-track {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+.p-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 0.1s;
+  flex-shrink: 0;
+}
+.p-dot:hover { background: var(--border-strong); }
+.p-dot.current { background: var(--text); }
+.p-dot.ok { background: var(--success-border); }
+.p-dot.bad { background: var(--danger-border); }
+.p-dot.skipped { background: #d4c9b0; }
+
+/* Question */
+.q-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+}
+.q-num {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+}
+.q-section-badge {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+.q-text {
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  margin-bottom: 1.75rem;
+  color: var(--text);
+}
+
+/* Options */
+.options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--surface);
+  text-align: left;
+  width: 100%;
+  font-family: var(--sans);
+}
+.option:hover:not(.locked) { border-color: var(--border-strong); background: #fafaf8; }
+.option .opt-key {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  min-width: 14px;
+  padding-top: 1px;
+}
+.option.selected { border-color: var(--text); background: #f7f6f3; }
+.option.selected .opt-key { color: var(--text); }
+.option.correct { border-color: var(--success-border); background: var(--success-bg); color: var(--success-text); }
+.option.correct .opt-key { color: var(--success-text); }
+.option.wrong { border-color: var(--danger-border); background: var(--danger-bg); color: var(--danger-text); }
+.option.wrong .opt-key { color: var(--danger-text); }
+.option.reveal { border-color: var(--success-border); background: var(--success-bg); color: var(--success-text); }
+.option.reveal .opt-key { color: var(--success-text); }
+.option.locked { cursor: default; }
+
+/* T/F */
+.tf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1.5rem; }
+.tf-btn {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 400;
+  font-family: var(--sans);
+  color: var(--text);
+  background: var(--surface);
+  transition: border-color 0.12s, background 0.12s;
+  letter-spacing: 0.01em;
+}
+.tf-btn:hover:not(.locked) { border-color: var(--border-strong); }
+.tf-btn.selected { border-color: var(--text); background: #f7f6f3; font-weight: 500; }
+.tf-btn.correct { border-color: var(--success-border); background: var(--success-bg); color: var(--success-text); }
+.tf-btn.wrong { border-color: var(--danger-border); background: var(--danger-bg); color: var(--danger-text); }
+.tf-btn.reveal { border-color: var(--success-border); background: var(--success-bg); color: var(--success-text); }
+.tf-btn.locked { cursor: default; }
+
+/* Feedback */
+.feedback {
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 1.25rem;
+  font-family: var(--mono);
+}
+.feedback.ok { background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); }
+.feedback.bad { background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); }
+
+/* Nav */
+.nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+.btn {
+  padding: 9px 20px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: var(--sans);
+  color: var(--text);
+  background: var(--surface);
+  transition: background 0.12s, border-color 0.12s;
+  font-weight: 400;
+}
+.btn:hover:not(:disabled) { background: #f0efe9; border-color: var(--border-strong); }
+.btn:disabled { opacity: 0.3; cursor: default; }
+.btn.primary {
+  background: var(--text);
+  color: white;
+  border-color: var(--text);
+}
+.btn.primary:hover { opacity: 0.85; }
+.nav-center { font-size: 12px; color: var(--text-tertiary); font-family: var(--mono); }
+
+/* Section divider */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 2rem 0 1.75rem;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  font-family: var(--mono);
+}
+.section-divider::before, .section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Results */
+.results-wrap { max-width: 560px; margin: 0 auto; }
+.score-hero {
+  text-align: center;
+  padding: 3rem 1.5rem 2.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+}
+.score-hero .big-num {
+  font-size: 72px;
+  font-weight: 300;
+  font-family: var(--mono);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.score-hero .grade-badge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 3px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+.r-cell {
+  background: var(--bg);
+  border-radius: 6px;
+  padding: 0.75rem;
+  text-align: center;
+}
+.r-cell .rn { font-size: 22px; font-weight: 300; font-family: var(--mono); letter-spacing: -0.02em; }
+.r-cell .rl { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+.btn-retake {
+  width: 100%;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 13px;
+  font-family: var(--sans);
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+}
+.btn-retake:hover { background: var(--bg); border-color: var(--border-strong); }
+
+/* Review */
+.review-section { margin-top: 2rem; }
+.review-section h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-tertiary);
+  font-weight: 400;
+  font-family: var(--mono);
+  margin-bottom: 1rem;
+}
+.review-item {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.review-item:last-child { border-bottom: none; }
+.review-qnum {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text-tertiary);
+  margin-bottom: 5px;
+}
+.review-qtext {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 6px;
+  font-weight: 300;
+}
+.review-your {
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--danger-text);
+  margin-bottom: 2px;
+}
+.review-correct {
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--success-text);
+}
+
+/* Unanswered notice */
+.notice {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-family: var(--mono);
+  padding: 8px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .main { padding: 1.5rem 1rem 3rem; }
+  .site-header { padding: 0 1rem; }
+  .q-text { font-size: 16px; }
+  .header-stat { display: none; }
+  .results-grid, .stat-row { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="logo" href="#">CD/EXAM</a>
+  <div class="header-right">
+    <div class="header-stat" id="hdr-stat">—</div>
+  </div>
+</header>
+
+<main class="main" id="app"></main>
+
+<script>
+const ANSWERS = {
+  Q1:'a',Q2:'c',Q3:'c',Q4:'d',Q5:'c',Q6:'c',Q7:'c',Q8:'b',Q9:'c',Q10:'a',
+  Q11:'b',Q12:'d',Q13:'c',Q14:'b',Q15:'b',Q16:'c',Q17:'b',Q18:'d',Q19:'c',Q20:'d',
+  Q21:'a',Q22:'c',Q23:'c',Q24:'b',Q25:'b',Q26:'c',Q27:'d',Q28:'a',Q29:'b',Q30:'c',
+  Q31:'b',Q32:'c',Q33:'b',Q34:'b',Q35:'b',Q36:'c',Q37:'d',Q38:'c',Q39:'a',Q40:'d',
+  Q41:'b',Q42:'c',Q43:'b',Q44:'b',Q45:'b',Q46:'b',Q47:'a',Q48:'c',Q49:'c',Q50:'c',
+  Q51:'d',Q52:'c',Q53:'c',Q54:'b',Q55:'c',Q56:'b',Q57:'c',Q58:'b',Q59:'c',Q60:'c',
+  Q61:'c',Q62:'b',Q63:'b',Q64:'b',Q65:'c',Q66:'c',Q67:'b',Q68:'a',Q69:'b',Q70:'b',
+  Q71:true,Q72:false,Q73:true,Q74:false,Q75:true,Q76:true,Q77:true,Q78:false,Q79:true,Q80:false,
+  Q81:true,Q82:true,Q83:true,Q84:false,Q85:true,Q86:false,Q87:true,Q88:false,Q89:true,Q90:true,
+  Q91:false,Q92:false,Q93:true,Q94:false,Q95:true,Q96:true,Q97:false,Q98:true,Q99:false,Q100:true
+};
+
+const QUESTIONS = [
+  {id:'Q1',type:'mcq',section:'A',text:'What is the primary function of a compiler?',options:{a:'Translate programs',b:'Execute programs',c:'Store programs',d:'Edit programs'}},
+  {id:'Q2',type:'mcq',section:'A',text:'Which of the following is considered a source language?',options:{a:'Machine code',b:'Assembly language',c:'C++',d:'Instruction set'}},
+  {id:'Q3',type:'mcq',section:'A',text:'The target language of a compiler is usually:',options:{a:'Java',b:'C',c:'Machine instruction set',d:'Python'}},
+  {id:'Q4',type:'mcq',section:'A',text:'Which phase of the compiler focuses on understanding the source program?',options:{a:'Optimizer',b:'Loader',c:'Back End',d:'Front End'}},
+  {id:'Q5',type:'mcq',section:'A',text:'The intermediate form between front end and back end is called:',options:{a:'Machine code',b:'Assembly code',c:'Intermediate Representation (IR)',d:'Object code'}},
+  {id:'Q6',type:'mcq',section:'A',text:'Which phase improves program performance?',options:{a:'Front end',b:'Back end',c:'Optimizer',d:'Linker'}},
+  {id:'Q7',type:'mcq',section:'A',text:'Which of the following is NOT a task of a compiler?',options:{a:'Error detection',b:'Program translation',c:'Program execution',d:'Optimization'}},
+  {id:'Q8',type:'mcq',section:'A',text:'Which of the following best describes analysis in compilation?',options:{a:'Producing target code',b:'Discovering program meaning',c:'Optimizing machine instructions',d:'Executing instructions'}},
+  {id:'Q9',type:'mcq',section:'A',text:'A source-to-source compiler translates:',options:{a:'Machine code to machine code',b:'High-level language to machine code',c:'One high-level language to another high-level language',d:'Assembly to binary'}},
+  {id:'Q10',type:'mcq',section:'A',text:'Which phase is machine independent and language dependent?',options:{a:'Analysis',b:'Synthesis',c:'Code generation',d:'Optimization'}},
+  {id:'Q11',type:'mcq',section:'A',text:'The scanner is also called the:',options:{a:'Parser',b:'Lexer',c:'Optimizer',d:'Generator'}},
+  {id:'Q12',type:'mcq',section:'A',text:'Which phase generates the parse tree?',options:{a:'Lexical analysis',b:'Optimization',c:'Semantic analysis',d:'Syntax analysis'}},
+  {id:'Q13',type:'mcq',section:'A',text:'Semantic analysis mainly checks:',options:{a:'Grammar structure',b:'Token formation',c:'Type compatibility and declarations',d:'Machine instructions'}},
+  {id:'Q14',type:'mcq',section:'A',text:'Intermediate code is generated:',options:{a:'Before semantic analysis',b:'After semantic analysis',c:'After code generation',d:'After linking'}},
+  {id:'Q15',type:'mcq',section:'A',text:'Which phase removes unnecessary code lines?',options:{a:'Parsing',b:'Optimization',c:'Lexical analysis',d:'Code generation'}},
+  {id:'Q16',type:'mcq',section:'A',text:'ILOC is best described as:',options:{a:'A programming language',b:'A machine language',c:'An intermediate language for optimizing compilers',d:'A scripting language'}},
+  {id:'Q17',type:'mcq',section:'A',text:'The scanner converts:',options:{a:'Tokens into syntax trees',b:'Characters into tokens',c:'Tokens into machine code',d:'Syntax trees into IR'}},
+  {id:'Q18',type:'mcq',section:'A',text:'Which compiler phase processes every character of the source program?',options:{a:'Syntax analysis',b:'Semantic analysis',c:'Code generation',d:'Lexical analysis'}},
+  {id:'Q19',type:'mcq',section:'A',text:'The microsyntax of a language defines:',options:{a:'Machine instructions',b:'Program meaning',c:'How characters form words',d:'Optimization strategies'}},
+  {id:'Q20',type:'mcq',section:'A',text:'Which of the following is NOT a token type?',options:{a:'Identifier',b:'Keyword',c:'Operator',d:'Parse tree'}},
+  {id:'Q21',type:'mcq',section:'A',text:'Lexemes are:',options:{a:'Actual character sequences',b:'Patterns',c:'Grammar rules',d:'Machine instructions'}},
+  {id:'Q22',type:'mcq',section:'A',text:'Which formalism is used to represent transition diagrams mathematically?',options:{a:'Pushdown automata',b:'Turing machines',c:'Finite automata',d:'Context-free grammars'}},
+  {id:'Q23',type:'mcq',section:'A',text:'The five-tuple representation of FA does NOT include:',options:{a:'States',b:'Alphabet',c:'Stack',d:'Transition function'}},
+  {id:'Q24',type:'mcq',section:'A',text:'Which structure allows recognition of infinite sets of strings such as numbers?',options:{a:'Linear chain',b:'Cyclic transitions',c:'Syntax trees',d:'Symbol tables'}},
+  {id:'Q25',type:'mcq',section:'A',text:'The language accepted by a finite automaton is called:',options:{a:'Context-free language',b:'Regular language',c:'Recursive language',d:'Context-sensitive language'}},
+  {id:'Q26',type:'mcq',section:'A',text:'The operator * in regular expressions represents:',options:{a:'One occurrence',b:'Optional occurrence',c:'Zero or more occurrences',d:'Exactly two occurrences'}},
+  {id:'Q27',type:'mcq',section:'A',text:'Which operator has the highest precedence?',options:{a:'|',b:'Concatenation',c:'Alternation',d:'*'}},
+  {id:'Q28',type:'mcq',section:'A',text:'The empty string is represented by:',options:{a:'ε',b:'φ',c:'λ',d:'0'}},
+  {id:'Q29',type:'mcq',section:'A',text:'NFAs allow:',options:{a:'Only one transition per state',b:'ε-transitions',c:'No accepting states',d:'Infinite states'}},
+  {id:'Q30',type:'mcq',section:'A',text:'DFAs:',options:{a:'Allow ε-transitions',b:'Have multiple transitions per symbol',c:'Have exactly one transition per symbol',d:'Are always smaller than NFAs'}},
+  {id:'Q31',type:'mcq',section:'A',text:"Thompson's construction converts:",options:{a:'DFA → RE',b:'RE → NFA',c:'NFA → DFA',d:'DFA → NFA'}},
+  {id:'Q32',type:'mcq',section:'A',text:'Subset construction converts:',options:{a:'RE → DFA',b:'DFA → RE',c:'NFA → DFA',d:'DFA → NFA'}},
+  {id:'Q33',type:'mcq',section:'A',text:"Hopcroft's algorithm is used to:",options:{a:'Construct NFA',b:'Minimize DFA',c:'Build RE',d:'Remove ε'}},
+  {id:'Q34',type:'mcq',section:'A',text:'A DFA:',options:{a:'May have multiple next states',b:'Has deterministic transitions',c:'Allows ε-moves',d:'Is always nondeterministic'}},
+  {id:'Q35',type:'mcq',section:'A',text:'Parsing is the:',options:{a:'First phase of compilation',b:'Second stage of the compiler front end',c:'Code generation phase',d:'Optimization phase'}},
+  {id:'Q36',type:'mcq',section:'A',text:'The parser receives input from the:',options:{a:'Code generator',b:'Optimizer',c:'Scanner',d:'Linker'}},
+  {id:'Q37',type:'mcq',section:'A',text:'Regular expressions cannot:',options:{a:'Define identifiers',b:'Recognize numbers',c:'Match strings',d:'Handle balanced parentheses'}},
+  {id:'Q38',type:'mcq',section:'A',text:'A Context-Free Grammar consists of:',options:{a:'Two components',b:'Three components',c:'Four components',d:'Five components'}},
+  {id:'Q39',type:'mcq',section:'A',text:'The start symbol must be:',options:{a:'A non-terminal',b:'A terminal',c:'A production',d:'A token'}},
+  {id:'Q40',type:'mcq',section:'A',text:'A derivation begins with:',options:{a:'A terminal',b:'A token',c:'A sentential form',d:'The start symbol'}},
+  {id:'Q41',type:'mcq',section:'A',text:'A string containing both terminals and non-terminals is called:',options:{a:'Sentence',b:'Sentential form',c:'Production',d:'Grammar'}},
+  {id:'Q42',type:'mcq',section:'A',text:'A grammar is ambiguous if:',options:{a:'It has no start symbol',b:'It produces infinite strings',c:'A sentence has multiple derivations',d:'It has many productions'}},
+  {id:'Q43',type:'mcq',section:'A',text:'In arithmetic precedence:',options:{a:'+ has higher precedence than ×',b:'× has higher precedence than +',c:'Both are equal',d:'Parentheses are lowest'}},
+  {id:'Q44',type:'mcq',section:'A',text:'Top-down parsing builds the tree from:',options:{a:'Leaves to root',b:'Root to leaves',c:'Middle outward',d:'Tokens only'}},
+  {id:'Q45',type:'mcq',section:'A',text:'Bottom-up parsing builds the tree from:',options:{a:'Root downward',b:'Leaves upward',c:'Start symbol only',d:'Non-terminals first'}},
+  {id:'Q46',type:'mcq',section:'A',text:'The if-then-else ambiguity is resolved by:',options:{a:'Removing else',b:'Binding else to nearest unmatched if',c:'Ignoring nesting',d:'Using regular expressions'}},
+  {id:'Q47',type:'mcq',section:'A',text:'CFGs are a superset of:',options:{a:'Regular grammars',b:'Turing machines',c:'DFAs',d:'NFAs'}},
+  {id:'Q48',type:'mcq',section:'A',text:'A parse tree represents:',options:{a:'Token stream',b:'Lexical categories',c:'Derivation structure',d:'Machine code'}},
+  {id:'Q49',type:'mcq',section:'A',text:'The parser receives input from the:',options:{a:'Optimizer',b:'Code generator',c:'Lexical analyzer',d:'Linker'}},
+  {id:'Q50',type:'mcq',section:'A',text:'The output of the syntax analysis phase is:',options:{a:'Machine code',b:'Token list',c:'Parse tree',d:'Symbol table'}},
+  {id:'Q51',type:'mcq',section:'A',text:'In CFG S → ABC, the start symbol is:',options:{a:'A',b:'B',c:'C',d:'S'}},
+  {id:'Q52',type:'mcq',section:'A',text:'The symbol ε represents:',options:{a:'Terminal',b:'Non-terminal',c:'Empty string',d:'Operator'}},
+  {id:'Q53',type:'mcq',section:'A',text:'In leftmost derivation, we replace:',options:{a:'Any non-terminal',b:'Rightmost non-terminal',c:'Leftmost non-terminal',d:'All non-terminals'}},
+  {id:'Q54',type:'mcq',section:'A',text:'In rightmost derivation, we replace:',options:{a:'Leftmost non-terminal',b:'Rightmost non-terminal',c:'Start symbol only',d:'Terminal only'}},
+  {id:'Q55',type:'mcq',section:'A',text:'A grammar is ambiguous if:',options:{a:'It has no start symbol',b:'It has ε-productions',c:'A string has multiple parse trees',d:'It has many rules'}},
+  {id:'Q56',type:'mcq',section:'A',text:'In the expression grammar, multiplication has:',options:{a:'Lower precedence than addition',b:'Higher precedence than addition',c:'Same precedence',d:'No precedence'}},
+  {id:'Q57',type:'mcq',section:'A',text:'Factor → (Exp) | number means:',options:{a:'Factor can be only number',b:'Factor cannot use parentheses',c:'Factor can be a parenthesized expression or number',d:'Factor must contain operator'}},
+  {id:'Q58',type:'mcq',section:'A',text:'Abstract Syntax Tree (AST):',options:{a:'Contains all grammar symbols',b:'Is more compact than parse tree',c:'Includes ε nodes',d:'Is identical to parse tree'}},
+  {id:'Q59',type:'mcq',section:'A',text:'The grammar X → X+X | X*X | X | a demonstrates:',options:{a:'Determinism',b:'Precedence',c:'Ambiguity',d:'Regular grammar'}},
+  {id:'Q60',type:'mcq',section:'A',text:'The string "a+a*a" has:',options:{a:'One derivation',b:'No derivation',c:'Two derivations',d:'Infinite derivations'}},
+  {id:'Q61',type:'mcq',section:'A',text:'Terminals in CFG example {a,b,c} are:',options:{a:'Non-terminals',b:'Variables',c:'Basic symbols',d:'Productions'}},
+  {id:'Q62',type:'mcq',section:'A',text:"The rule A → aaA | ε allows:",options:{a:"Exactly two a's",b:"Any number of a's",c:"No a's",d:'Only one a'}},
+  {id:'Q63',type:'mcq',section:'A',text:'A parse tree represents:',options:{a:'Semantic analysis',b:'Grammatical structure',c:'Machine instructions',d:'Optimization'}},
+  {id:'Q64',type:'mcq',section:'A',text:'Top-down parsing builds the parse tree from:',options:{a:'Leaves to root',b:'Root to leaves',c:'Middle outward',d:'Tokens first'}},
+  {id:'Q65',type:'mcq',section:'A',text:'Top-down parsing corresponds to:',options:{a:'Rightmost derivation',b:'Bottom-up parsing',c:'Leftmost derivation',d:'Shift-reduce parsing'}},
+  {id:'Q66',type:'mcq',section:'A',text:'Recursive-descent parsing:',options:{a:'Uses parsing tables only',b:'Is bottom-up',c:'May require backtracking',d:'Cannot use recursion'}},
+  {id:'Q67',type:'mcq',section:'A',text:'Predictive parsing:',options:{a:'Requires backtracking',b:'Uses one lookahead symbol',c:'Is ambiguous',d:'Is bottom-up'}},
+  {id:'Q68',type:'mcq',section:'A',text:'LL(1) means:',options:{a:'Left-to-right scan, leftmost derivation, 1 lookahead',b:'Right-to-left scan',c:'One token output',d:'Bottom-up parsing'}},
+  {id:'Q69',type:'mcq',section:'A',text:'A grammar is left recursive if:',options:{a:'A → aA',b:'A → Aa',c:'A → a',d:'A → β'}},
+  {id:'Q70',type:'mcq',section:'A',text:'Left recursion in top-down parsing causes:',options:{a:'Faster parsing',b:'Infinite recursion',c:'Syntax error',d:'No problem'}},
+  {id:'Q71',type:'tf',section:'B',text:'A compiler must understand both syntax and semantics of a language.'},
+  {id:'Q72',type:'tf',section:'B',text:'The back end generates intermediate representation.'},
+  {id:'Q73',type:'tf',section:'B',text:'Intermediate languages simplify the compilation process.'},
+  {id:'Q74',type:'tf',section:'B',text:'Optimization always increases program size.'},
+  {id:'Q75',type:'tf',section:'B',text:'A three-phase compiler includes a middle optimization phase.'},
+  {id:'Q76',type:'tf',section:'B',text:'Domain-Specific Languages (DSLs) may require special compilers.'},
+  {id:'Q77',type:'tf',section:'B',text:'Compilation can be divided into analysis and synthesis tasks.'},
+  {id:'Q78',type:'tf',section:'B',text:'The back end only performs syntax checking.'},
+  {id:'Q79',type:'tf',section:'B',text:'Code generation produces assembly or machine-level code.'},
+  {id:'Q80',type:'tf',section:'B',text:'Tokens are always individual characters.'},
+  {id:'Q81',type:'tf',section:'B',text:'Lexical analyzer removes whitespace and comments.'},
+  {id:'Q82',type:'tf',section:'B',text:'Regular expressions define regular grammars.'},
+  {id:'Q83',type:'tf',section:'B',text:'Finite automata operate in time proportional to input length.'},
+  {id:'Q84',type:'tf',section:'B',text:'Lexical analysis comes after syntax analysis.'},
+  {id:'Q85',type:'tf',section:'B',text:'Every token has a type and a value.'},
+  {id:'Q86',type:'tf',section:'B',text:'Identifiers form a finite set of strings.'},
+  {id:'Q87',type:'tf',section:'B',text:'Every DFA has an equivalent NFA.'},
+  {id:'Q88',type:'tf',section:'B',text:'NFAs cannot be implemented on real hardware.'},
+  {id:'Q89',type:'tf',section:'B',text:'Parsing constructs a syntactic structure for the program.'},
+  {id:'Q90',type:'tf',section:'B',text:'A CFG can generate balanced parentheses.'},
+  {id:'Q91',type:'tf',section:'B',text:'Regular expressions can fully describe programming language syntax.'},
+  {id:'Q92',type:'tf',section:'B',text:'In leftmost derivation, the rightmost non-terminal is expanded first.'},
+  {id:'Q93',type:'tf',section:'B',text:'The parser checks syntax according to production rules.'},
+  {id:'Q94',type:'tf',section:'B',text:'Rightmost derivation always gives a different final string than leftmost.'},
+  {id:'Q95',type:'tf',section:'B',text:'A grammar with multiple parse trees for one string is ambiguous.'},
+  {id:'Q96',type:'tf',section:'B',text:'Abstract Syntax Trees remove unnecessary syntactic details.'},
+  {id:'Q97',type:'tf',section:'B',text:'The grammar X → X+X | X*X | X | a is unambiguous.'},
+  {id:'Q98',type:'tf',section:'B',text:'Top-down parsing expands non-terminals starting from the start symbol.'},
+  {id:'Q99',type:'tf',section:'B',text:'Left recursion is safe in recursive-descent parsing.'},
+  {id:'Q100',type:'tf',section:'B',text:'FIRST and FOLLOW sets are used to construct LL(1) tables.'}
+];
+
+let state = { screen: 'start', mode: 'exam', current: 0, answers: {}, submitted: false };
+
+function $(id) { return document.getElementById(id); }
+function app() { return $('app'); }
+
+function updateHeader() {
+  const stat = $('hdr-stat');
+  if (state.screen === 'exam') {
+    const answered = Object.keys(state.answers).length;
+    stat.innerHTML = `<span>${answered}</span> / 100 answered`;
+  } else if (state.screen === 'results') {
+    stat.innerHTML = 'Results';
+  } else {
+    stat.innerHTML = '—';
+  }
+}
+
+function render() {
+  updateHeader();
+  if (state.screen === 'start') renderStart();
+  else if (state.screen === 'exam') renderExam();
+  else if (state.screen === 'results') renderResults();
+}
+
+function renderStart() {
+  app().innerHTML = `
+    <div class="start-screen">
+      <h1>Compiler Design<br>Question Bank</h1>
+      <p class="subtitle">CSC · 2025 Edition</p>
+      <div class="stat-row">
+        <div class="stat-cell"><span class="num">70</span><span class="lbl">MCQ</span></div>
+        <div class="stat-cell"><span class="num">30</span><span class="lbl">True / False</span></div>
+        <div class="stat-cell"><span class="num">100</span><span class="lbl">Total</span></div>
+      </div>
+      <div class="mode-cards">
+        <div class="mode-card ${state.mode==='exam'?'active':''}" onclick="setMode('exam')">
+          <div class="mode-icon">[ ]</div>
+          <div class="mode-title">Exam mode</div>
+          <div class="mode-desc">Answer all questions, then submit to see your score.</div>
+        </div>
+        <div class="mode-card ${state.mode==='practice'?'active':''}" onclick="setMode('practice')">
+          <div class="mode-icon">[✓]</div>
+          <div class="mode-title">Practice mode</div>
+          <div class="mode-desc">Instant feedback after each answer.</div>
+        </div>
+      </div>
+      <button class="btn-start" onclick="startExam()">Begin →</button>
+    </div>`;
+}
+
+function setMode(m) {
+  state.mode = m;
+  renderStart();
+}
+
+function startExam() {
+  state.screen = 'exam';
+  state.current = 0;
+  state.answers = {};
+  render();
+}
+
+function renderExam() {
+  const q = QUESTIONS[state.current];
+  const answered = state.answers[q.id] !== undefined;
+  const correct = ANSWERS[q.id];
+  const userAns = state.answers[q.id];
+  const showFeedback = state.mode === 'practice' && answered;
+  const total = QUESTIONS.length;
+  const answeredCount = Object.keys(state.answers).length;
+  const isLast = state.current === total - 1;
+  const allAnswered = answeredCount === total;
+
+  // Progress dots
+  let dots = '<div class="progress-track">';
+  for (let i = 0; i < total; i++) {
+    const dq = QUESTIONS[i];
+    let cls = 'p-dot';
+    if (i === state.current) cls += ' current';
+    else if (state.answers[dq.id] !== undefined) {
+      if (state.mode === 'practice') {
+        cls += state.answers[dq.id] === ANSWERS[dq.id] ? ' ok' : ' bad';
+      } else {
+        cls += ' skipped';
+      }
+    }
+    dots += `<div class="${cls}" title="Q${i+1}" onclick="jumpTo(${i})"></div>`;
+  }
+  dots += '</div>';
+
+  // Section divider at Q71
+  const showDivider = state.current === 70;
+
+  // Options
+  let optHtml = '';
+  if (q.type === 'mcq') {
+    optHtml = '<div class="options">';
+    for (const [k, v] of Object.entries(q.options)) {
+      let cls = 'option';
+      if (answered) {
+        cls += ' locked';
+        if (showFeedback) {
+          if (k === correct) cls += ' correct';
+          else if (k === userAns) cls += ' wrong';
+        } else {
+          if (k === userAns) cls += ' selected';
+        }
+      }
+      optHtml += `<button class="${cls}" onclick="doAnswer('${q.id}','${k}')">
+        <span class="opt-key">${k}</span><span>${v}</span>
+      </button>`;
+    }
+    optHtml += '</div>';
+  } else {
+    let tCls = 'tf-btn', fCls = 'tf-btn';
+    if (answered) {
+      tCls += ' locked'; fCls += ' locked';
+      if (showFeedback) {
+        tCls += correct === true ? ' correct' : (userAns === true ? ' wrong' : '');
+        fCls += correct === false ? ' correct' : (userAns === false ? ' wrong' : '');
+      } else {
+        if (userAns === true) tCls += ' selected';
+        if (userAns === false) fCls += ' selected';
+      }
+    }
+    optHtml = `<div class="tf-row">
+      <button class="${tCls}" onclick="doAnswer('${q.id}',true)">True</button>
+      <button class="${fCls}" onclick="doAnswer('${q.id}',false)">False</button>
+    </div>`;
+  }
+
+  let feedbackHtml = '';
+  if (showFeedback && answered) {
+    const ok = userAns === correct;
+    feedbackHtml = `<div class="feedback ${ok?'ok':'bad'}">${ok ? '✓ correct' : '✗ incorrect — see highlighted answer above'}</div>`;
+  }
+
+  let unansweredNotice = '';
+  if (state.mode === 'exam' && isLast && !allAnswered) {
+    unansweredNotice = `<div class="notice">${100 - answeredCount} question${100-answeredCount!==1?'s':''} unanswered — use the dots above to navigate back.</div>`;
+  }
+
+  let navRight = '';
+  if (!isLast) {
+    navRight = `<button class="btn" onclick="nextQ()">Next →</button>`;
+  } else {
+    navRight = `<button class="btn primary" onclick="submitExam()" ${state.mode==='exam'&&!allAnswered?'disabled':''}>Submit exam</button>`;
+  }
+
+  app().innerHTML = `
+    ${dots}
+    <div class="q-header">
+      <span class="q-num">Q${state.current+1} of ${total}</span>
+      <span class="q-section-badge">Part ${q.section} · ${q.type==='mcq'?'MCQ':'True / False'}</span>
+    </div>
+    <div class="q-text">${q.text}</div>
+    ${optHtml}
+    ${feedbackHtml}
+    ${unansweredNotice}
+    <div class="nav-row">
+      <button class="btn" onclick="prevQ()" ${state.current===0?'disabled':''}>← Previous</button>
+      <span class="nav-center">${answeredCount} / ${total}</span>
+      ${navRight}
+    </div>`;
+}
+
+function doAnswer(id, val) {
+  if (state.mode === 'practice' && state.answers[id] !== undefined) return;
+  state.answers[id] = val;
+  render();
+}
+
+function nextQ() { if (state.current < 99) { state.current++; render(); } }
+function prevQ() { if (state.current > 0) { state.current--; render(); } }
+function jumpTo(i) { state.current = i; render(); }
+
+function submitExam() {
+  state.screen = 'results';
+  render();
+}
+
+function renderResults() {
+  let correct = 0, mcqC = 0, tfC = 0;
+  QUESTIONS.forEach(q => {
+    if (state.answers[q.id] === ANSWERS[q.id]) {
+      correct++;
+      q.type === 'mcq' ? mcqC++ : tfC++;
+    }
+  });
+  const pct = Math.round((correct / 100) * 100);
+  const grade = pct>=90?'A':pct>=80?'B':pct>=70?'C':pct>=60?'D':'F';
+
+  let reviewHtml = '';
+  QUESTIONS.forEach((q, i) => {
+    const ok = state.answers[q.id] === ANSWERS[q.id];
+    if (!ok) {
+      const ca = ANSWERS[q.id];
+      let correctText = '';
+      if (q.type === 'mcq') correctText = `${ca}) ${q.options[ca]}`;
+      else correctText = ca ? 'True' : 'False';
+      let yourText = '';
+      if (state.answers[q.id] !== undefined) {
+        if (q.type === 'mcq') yourText = `${state.answers[q.id]}) ${q.options[state.answers[q.id]]}`;
+        else yourText = state.answers[q.id] ? 'True' : 'False';
+      } else {
+        yourText = 'Not answered';
+      }
+      reviewHtml += `<div class="review-item">
+        <div class="review-qnum">Q${i+1} · Part ${q.section}</div>
+        <div class="review-qtext">${q.text}</div>
+        <div class="review-your">✗ Your answer: ${yourText}</div>
+        <div class="review-correct">✓ Correct: ${correctText}</div>
+      </div>`;
+    }
+  });
+
+  app().innerHTML = `
+    <div class="results-wrap">
+      <div class="score-hero">
+        <div class="big-num">${pct}%</div>
+        <div class="grade-badge">Grade ${grade}</div>
+        <div class="results-grid">
+          <div class="r-cell"><div class="rn">${correct}<span style="font-size:14px;color:var(--text-tertiary)">/100</span></div><div class="rl">Correct</div></div>
+          <div class="r-cell"><div class="rn">${mcqC}<span style="font-size:14px;color:var(--text-tertiary)">/70</span></div><div class="rl">MCQ</div></div>
+          <div class="r-cell"><div class="rn">${tfC}<span style="font-size:14px;color:var(--text-tertiary)">/30</span></div><div class="rl">True/False</div></div>
+        </div>
+        <button class="btn-retake" onclick="goHome()">← Take again</button>
+      </div>
+      ${reviewHtml ? `<div class="review-section"><h2>Incorrect answers (${100-correct})</h2>${reviewHtml}</div>` : '<div style="text-align:center;padding:2rem;font-family:var(--mono);font-size:13px;color:var(--text-tertiary);">Perfect score — all 100 correct.</div>'}
+    </div>`;
+}
+
+function goHome() {
+  state = { screen: 'start', mode: state.mode, current: 0, answers: {}, submitted: false };
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
