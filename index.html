@@ -92,8 +92,10 @@ body {
   font-family: var(--mono);
 }
 .stat-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  display:flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  flex-grow: 1;
   gap: 10px;
   margin-bottom: 2rem;
 }
@@ -103,7 +105,14 @@ body {
   border-radius: 8px;
   padding: 1rem;
   text-align: center;
+  flex: 1;
+  min-width: 120px;
 }
+
+.stat-cell.total {
+  flex-grow: 1;
+}
+
 .stat-cell .num {
   font-size: 28px;
   font-weight: 300;
@@ -617,7 +626,7 @@ function renderStart() {
       <div class="stat-row">
         <div class="stat-cell"><span class="num">70</span><span class="lbl">MCQ</span></div>
         <div class="stat-cell"><span class="num">30</span><span class="lbl">True / False</span></div>
-        <div class="stat-cell"><span class="num">100</span><span class="lbl">Total</span></div>
+        <div class="stat-cell total"><span class="num">100</span><span class="lbl">Total</span></div>
       </div>
       <div class="mode-cards">
         <div class="mode-card ${state.mode==='exam'?'active':''}" onclick="setMode('exam')">
